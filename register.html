@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deecent – Organization Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <div class="min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-xl bg-white shadow-xl rounded-xl p-8">
+      <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Welcome to Deecent</h2>
+      <p class="text-center text-gray-600 mb-8">Register your organization to access the network</p>
+
+      <form class="space-y-6" action="http://localhost:3001/api/register" method="POST" onsubmit="handleRegister(event)">
+        <!-- Org Name -->
+        <div>
+          <label for="orgName" class="block text-sm font-medium text-gray-700">Organization Name</label>
+          <input type="text" id="orgName" name="orgName" required class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <!-- Org Website -->
+        <div>
+          <label for="orgWebsite" class="block text-sm font-medium text-gray-700">Organization Website</label>
+          <input type="url" id="orgWebsite" name="orgWebsite" required class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <!-- Contact Person Name -->
+        <div>
+          <label for="contactName" class="block text-sm font-medium text-gray-700">Contact Person Name</label>
+          <input type="text" id="contactName" name="contactName" required class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <!-- Contact Email -->
+        <div>
+          <label for="contactEmail" class="block text-sm font-medium text-gray-700">Contact Person Email</label>
+          <input type="email" id="contactEmail" name="contactEmail" required class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <!-- Contact Phone -->
+        <div>
+          <label for="contactPhone" class="block text-sm font-medium text-gray-700">Contact Person Phone</label>
+          <input type="tel" id="contactPhone" name="contactPhone" required class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" id="password" name="password" required class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <!-- Submit -->
+        <div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium">Register Organization</button>
+        </div>
+      </form>
+
+      <p class="text-center text-sm text-gray-500 mt-6">
+        Already registered? <a href="login.html" class="text-blue-600 hover:underline">Login here</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+  function handleRegister(event) {
+    event.preventDefault();
+    const form = event.target;
+    const data = Object.fromEntries(new FormData(form));
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(res => {
+      if (res.status === 409) {
+        alert('User is already registered with this email.');
+      } else if (res.ok) {
+        window.location.href = 'login.html';
+      } else {
+        alert('Registration failed.');
+      }
+    })
+    .catch(() => alert('Registration failed.'));
+  }
+  </script>
+</body>
+</html>

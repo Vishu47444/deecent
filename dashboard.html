@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deecent Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function showTab(tabId) {
+      document.getElementById("feedback-form").classList.add("hidden");
+      document.getElementById("search-form").classList.add("hidden");
+      document.getElementById("search-results").classList.add("hidden");
+      document.getElementById(tabId).classList.remove("hidden");
+
+      document.getElementById("tab-feedback").classList.remove("bg-blue-100");
+      document.getElementById("tab-search").classList.remove("bg-blue-100");
+      document.getElementById("tab-" + tabId.split('-')[0]).classList.add("bg-blue-100");
+    }
+
+    function toggleDropdown() {
+      document.getElementById("profile-dropdown").classList.toggle("hidden");
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const searchForm = document.querySelector('#search-form');
+      const results = document.querySelector('#search-results');
+      const searchBtn = searchForm.querySelector('button[type="submit"]');
+
+      searchForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        results.classList.remove('hidden');
+        searchBtn.textContent = "Retry";
+      });
+    });
+
+    // Save user info to localStorage after login (to be set from login.html)
+    if (window.location.search.includes('user=')) {
+      try {
+        const user = JSON.parse(decodeURIComponent(window.location.search.split('user=')[1]));
+        localStorage.setItem('orgProfile', JSON.stringify(user));
+        // Remove user param from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch {}
+    }
+
+    function logout() {
+      localStorage.removeItem('orgProfile');
+      window.location.href = 'login.html';
+    }
+
+    function submitFeedback(event) {
+      event.preventDefault();
+      const form = event.target;
+      const data = Object.fromEntries(new FormData(form));
+      fetch('http://localhost:3001/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(async res => {
+        if (res.ok) {
+          alert('Feedback submitted successfully!');
+          form.reset();
+        } else {
+          const error = await res.json().catch(() => ({}));
+          alert('Failed to submit feedback. ' + (error.error ? error.error : '') + (error.details ? '\nDetails: ' + error.details : ''));
+        }
+      })
+      .catch(err => {
+        alert('Failed to submit feedback. Network or server error.');
+        console.error('Feedback submit error:', err);
+      });
+    }
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6 relative">
+  <!-- Profile dropdown top right -->
+  <div class="absolute top-6 right-6">
+    <div class="relative">
+      <button onclick="toggleDropdown()" class="flex items-center space-x-2 px-3 py-2 bg-white border rounded-md shadow-sm hover:bg-gray-100">
+        <div class="w-8 h-8 bg-orange-100 text-orange-600 flex items-center justify-center rounded-md text-xs font-bold">MP</div>
+        <span class="text-sm font-medium text-gray-700">My Profile</span>
+      </button>
+      <div id="profile-dropdown" class="absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg hidden z-50">
+        <a href="profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+        <a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Log Out</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8 mt-20">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">Deecent Dashboard</h1>
+      <span class="px-3 py-1 text-sm rounded-full font-medium bg-green-100 text-green-800">Organization Status: Approved</span>
+    </div>
+
+    <div class="flex mb-6 space-x-4">
+      <button id="tab-feedback" onclick="showTab('feedback-form')" class="px-4 py-2 bg-blue-100 text-blue-700 font-medium rounded-md">Enter Feedback</button>
+      <button id="tab-search" onclick="showTab('search-form')" class="px-4 py-2 text-gray-700 font-medium rounded-md hover:bg-gray-100">Search Candidate</button>
+    </div>
+
+    <form id="feedback-form" class="space-y-6" onsubmit="submitFeedback(event)">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Submit Candidate Feedback</h2>
+      <div><label class="block text-sm font-medium text-gray-700">Candidate Name</label><input type="text" name="candidateName" required class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
+      <div><label class="block text-sm font-medium text-gray-700">Aadhar Card / ID Number</label><input type="text" name="aadharId" required class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
+      <div><label class="block text-sm font-medium text-gray-700">Phone</label><input type="tel" name="phone" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
+      <div><label class="block text-sm font-medium text-gray-700">Email</label><input type="email" name="email" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
+      <div><label class="block text-sm font-medium text-gray-700">Feedback</label><textarea name="feedback" rows="4" required class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea></div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium">Submit Feedback</button>
+    </form>
+
+    <form id="search-form" class="space-y-6 hidden">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Search Candidate</h2>
+      <div><label class="block text-sm font-medium text-gray-700">Candidate Name</label><input type="text" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
+      <div><label class="block text-sm font-medium text-gray-700">Aadhar Card / ID Number</label><input type="text" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium">Search</button>
+    </form>
+
+    <div id="search-results" class="mt-10 space-y-6 hidden">
+      <h3 class="text-xl font-semibold text-gray-800">Search Results</h3>
+      <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-4">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-lg font-medium text-gray-900">John Doe</p>
+            <p class="text-sm text-gray-500">Aadhar/ID: 1234-5678-9012</p>
+            <p class="text-sm text-gray-500">Email: john@example.com</p>
+            <p class="text-sm text-gray-500">Phone: +91 9876543210</p>
+          </div>
+          <span class="inline-block px-3 py-1 text-sm bg-yellow-100 text-yellow-800 font-medium rounded-full">1 Match Found</span>
+        </div>
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+          <p class="text-sm text-gray-700">
+            <strong>Reported by:</strong> Acme Corp<br />
+            <strong>Date:</strong> Jan 15, 2025<br />
+            <strong>Feedback:</strong> Candidate accepted offer but did not join. No response during follow-up.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

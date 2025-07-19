@@ -1,0 +1,58 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile – Deecent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+  <div class="max-w-2xl mx-auto bg-white shadow-lg rounded-xl p-8">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Organization Profile</h1>
+    <div class="space-y-4 text-sm text-gray-700" id="profile-data">
+      <!-- Profile data will be injected here -->
+    </div>
+    <div class="mt-8 text-right">
+      <a href="dashboard.html" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Back to Dashboard</a>
+    </div>
+  </div>
+  <script>
+    let isVisible = false;
+    function togglePassword() {
+      const passSpan = document.getElementById("password");
+      const btn = event.target;
+      if (isVisible) {
+        passSpan.textContent = "********";
+        btn.textContent = "Show";
+      } else {
+        passSpan.textContent = window.orgProfile?.password || "********";
+        btn.textContent = "Hide";
+      }
+      isVisible = !isVisible;
+    }
+
+    function logout() {
+      localStorage.removeItem('orgProfile');
+      window.location.href = 'login.html';
+    }
+
+    // Load profile data from localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      const profile = JSON.parse(localStorage.getItem('orgProfile') || '{}');
+      window.orgProfile = profile;
+      const container = document.getElementById('profile-data');
+      container.innerHTML = `
+        <div><span class="font-medium">Organization Name:</span> ${profile.orgName || ''}</div>
+        <div><span class="font-medium">Organization Website:</span> ${profile.orgWebsite || ''}</div>
+        <div><span class="font-medium">Contact Person:</span> ${profile.contactName || ''}</div>
+        <div><span class="font-medium">Email:</span> ${profile.contactEmail || ''}</div>
+        <div><span class="font-medium">Phone:</span> ${profile.contactPhone || ''}</div>
+        <div>
+          <span class="font-medium">Password:</span>
+          <span id="password" class="ml-2">********</span>
+          <button onclick="togglePassword()" class="ml-4 text-blue-600 text-xs underline">Show</button>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>
