@@ -26,12 +26,54 @@
       const results = document.querySelector('#search-results');
       const searchBtn = searchForm.querySelector('button[type="submit"]');
 
-      searchForm.addEventListener('submit', function (e) {
+      searchForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        results.classList.remove('hidden');
+        const candidateName = searchForm.querySelector('input[name="candidateName"]').value.trim();
+        const aadharId = searchForm.querySelector('input[name="aadharId"]').value.trim();
+        let url = `http://localhost:3001/api/search-candidate?`;
+        if (candidateName) url += `candidateName=${encodeURIComponent(candidateName)}&`;
+        if (aadharId) url += `aadharId=${encodeURIComponent(aadharId)}`;
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+          renderSearchResults(data);
+          results.classList.remove('hidden');
+        } catch (err) {
+          results.innerHTML = '<div class="text-red-600">Failed to fetch candidate data.</div>';
+          results.classList.remove('hidden');
+        }
         searchBtn.textContent = "Retry";
       });
     });
+
+    function renderSearchResults(data) {
+      const results = document.getElementById('search-results');
+      if (!Array.isArray(data) || data.length === 0) {
+        results.innerHTML = '<div class="text-gray-600">No matching candidates found.</div>';
+        return;
+      }
+      results.innerHTML = `<h3 class=\"text-xl font-semibold text-gray-800\">Search Results</h3>` +
+        data.map(fb => `
+        <div class=\"bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-4\">
+          <div class=\"flex justify-between items-start\">
+            <div>
+              <p class=\"text-lg font-medium text-gray-900\">${fb.candidateName}</p>
+              <p class=\"text-sm text-gray-500\">Aadhar/ID: ${fb.aadharId}</p>
+              <p class=\"text-sm text-gray-500\">Email: ${fb.email}</p>
+              <p class=\"text-sm text-gray-500\">Phone: ${fb.phone}</p>
+            </div>
+            <span class=\"inline-block px-3 py-1 text-sm bg-yellow-100 text-yellow-800 font-medium rounded-full\">Match Found</span>
+          </div>
+          <div class=\"bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded\">
+            <p class=\"text-sm text-gray-700\">
+              <strong>Reported by:</strong> ${fb.orgName || 'Unknown'}<br />
+              <strong>Date:</strong> ${new Date(fb.submittedAt).toLocaleDateString()}<br />
+              <strong>Feedback:</strong> ${fb.feedback}
+            </p>
+          </div>
+        </div>
+      `).join('');
+    }
 
     // Save user info to localStorage after login (to be set from login.html)
     if (window.location.search.includes('user=')) {
@@ -91,7 +133,7 @@
   <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8 mt-20">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-gray-800">Deecent Dashboard</h1>
-      <span class="px-3 py-1 text-sm rounded-full font-medium bg-green-100 text-green-800">Organization Status: Approved</span>
+      <span class="px-3 py-1 text-sm rounded-full font-medium bg-yellow-100 text-yellow-800">Organization Status: Pending</span>
     </div>
 
     <div class="flex mb-6 space-x-4">
@@ -111,31 +153,13 @@
 
     <form id="search-form" class="space-y-6 hidden">
       <h2 class="text-xl font-semibold text-gray-800 mb-4">Search Candidate</h2>
-      <div><label class="block text-sm font-medium text-gray-700">Candidate Name</label><input type="text" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
-      <div><label class="block text-sm font-medium text-gray-700">Aadhar Card / ID Number</label><input type="text" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
+      <div><label class="block text-sm font-medium text-gray-700">Candidate Name</label><input type="text" name="candidateName" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
+      <div><label class="block text-sm font-medium text-gray-700">Aadhar Card / ID Number</label><input type="text" name="aadharId" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" /></div>
       <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium">Search</button>
     </form>
 
     <div id="search-results" class="mt-10 space-y-6 hidden">
-      <h3 class="text-xl font-semibold text-gray-800">Search Results</h3>
-      <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-4">
-        <div class="flex justify-between items-start">
-          <div>
-            <p class="text-lg font-medium text-gray-900">John Doe</p>
-            <p class="text-sm text-gray-500">Aadhar/ID: 1234-5678-9012</p>
-            <p class="text-sm text-gray-500">Email: john@example.com</p>
-            <p class="text-sm text-gray-500">Phone: +91 9876543210</p>
-          </div>
-          <span class="inline-block px-3 py-1 text-sm bg-yellow-100 text-yellow-800 font-medium rounded-full">1 Match Found</span>
-        </div>
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-          <p class="text-sm text-gray-700">
-            <strong>Reported by:</strong> Acme Corp<br />
-            <strong>Date:</strong> Jan 15, 2025<br />
-            <strong>Feedback:</strong> Candidate accepted offer but did not join. No response during follow-up.
-          </p>
-        </div>
-      </div>
+      <!-- Search results will be rendered here dynamically -->
     </div>
   </div>
 </body>

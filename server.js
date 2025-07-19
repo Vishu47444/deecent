@@ -128,6 +128,19 @@ app.post('/api/feedback', async (req, res) => {
 });
 
 // Debug endpoint: List all feedbacks
+// Search candidate endpoint
+app.get('/api/search-candidate', async (req, res) => {
+  try {
+    const { candidateName, aadharId } = req.query;
+    const query = {};
+    if (candidateName) query.candidateName = { $regex: candidateName, $options: 'i' };
+    if (aadharId) query.aadharId = { $regex: aadharId, $options: 'i' };
+    const feedbacks = await Feedback.find(query).sort({ submittedAt: -1 });
+    res.json(feedbacks);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to search candidates', details: err.message });
+  }
+});
 app.get('/api/debug/feedbacks', async (req, res) => {
   try {
     const feedbacks = await Feedback.find({});
