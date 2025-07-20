@@ -113,6 +113,27 @@
         console.error('Feedback submit error:', err);
       });
     }
+
+    // Dynamically set orgStatus badge (only 'Pending' or 'Approved')
+    window.addEventListener('DOMContentLoaded', () => {
+      const profile = JSON.parse(localStorage.getItem('orgProfile') || '{}');
+      const statusSpan = document.getElementById('org-status');
+      let status = (profile.orgStatus === 'Approved' || profile.orgStatus === 'Pending') ? profile.orgStatus : 'Pending';
+      let color = status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+      statusSpan.textContent = `Organization Status: ${status}`;
+      statusSpan.className = `px-3 py-1 text-sm rounded-full font-medium ${color}`;
+
+      // Enable/disable Search Candidate button based on orgStatus
+      const searchBtn = document.getElementById('tab-search');
+      if (status === 'Approved') {
+        searchBtn.disabled = false;
+        searchBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        searchBtn.disabled = true;
+        searchBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        searchBtn.onclick = null;
+      }
+    });
   </script>
 </head>
 <body class="bg-gray-50 min-h-screen p-6 relative">
@@ -133,7 +154,7 @@
   <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8 mt-20">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-gray-800">Deecent Dashboard</h1>
-      <span class="px-3 py-1 text-sm rounded-full font-medium bg-yellow-100 text-yellow-800">Organization Status: Pending</span>
+      <span id="org-status" class="px-3 py-1 text-sm rounded-full font-medium bg-yellow-100 text-yellow-800">Organization Status: Pending</span>
     </div>
 
     <div class="flex mb-6 space-x-4">

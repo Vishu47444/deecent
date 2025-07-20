@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
+const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
@@ -24,7 +25,8 @@ const userSchema = new mongoose.Schema({
   contactName: String,
   contactEmail: String,
   contactPhone: String,
-  password: String // Note: In production, hash passwords!
+  password: String, 
+  orgStatus: { type: String, default: 'Pending' }
 });
 const User = mongoose.model('User', userSchema);
 
@@ -42,23 +44,25 @@ const Feedback = mongoose.model('Feedback', feedbackSchema);
 // Registration endpoint
 app.post('/api/register', async (req, res) => {
   try {
-    // Trim whitespace from all fields
-    const payload = {
-      orgName: req.body.orgName?.trim(),
-      orgWebsite: req.body.orgWebsite?.trim(),
-      contactName: req.body.contactName?.trim(),
-      contactEmail: req.body.contactEmail?.trim(),
-      contactPhone: req.body.contactPhone?.trim(),
-      password: req.body.password?.trim()
-    };
-    console.log('Register payload:', payload);
-    const existingUser = await User.findOne({ contactEmail: payload.contactEmail });
+    // Check if user already exists
+    const contactEmail = req.body.contactEmail?.trim();
+    const existingUser = await User.findOne({ contactEmail });
     if (existingUser) {
       return res.status(409).json({ error: 'User already registered' });
     }
-    const user = new User(payload);
-    await user.save();
-    res.status(201).json({ message: 'Registration successful' });
+        // Hash password before saving
+        const hashedPassword = await bcrypt.hash(req.body.password?.trim(), 10);
+        const user = new User({
+            orgName: req.body.orgName?.trim(),
+            orgWebsite: req.body.orgWebsite?.trim(),
+            contactName: req.body.contactName?.trim(),
+            contactEmail: contactEmail,
+            contactPhone: req.body.contactPhone?.trim(),
+            password: hashedPassword,
+            orgStatus: 'Pending',
+        });
+        await user.save();
+        res.status(201).json({ message: 'Registration successful' });
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ error: 'Registration failed', details: err.message });
@@ -71,16 +75,25 @@ app.post('/api/login', async (req, res) => {
     const contactEmail = req.body.contactEmail?.trim().toLowerCase();
     const password = req.body.password?.trim();
     console.log('Login payload:', { contactEmail, password });
-    const user = await User.findOne({ contactEmail: { $regex: `^${contactEmail}$`, $options: 'i' }, password });
+    const user = await User.findOne({ contactEmail: { $regex: `^${contactEmail}$`, $options: 'i' } });
     console.log('User found:', user);
     if (user) {
-      res.json({ message: 'Login successful' });
+      // Check if the password matches
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (isMatch) {
+        res.json({ message: 'Login successful' });
+      } else {
+        res.status(401).json({ error: 'Invalid credentials' });
+      }
     } else {
       res.status(401).json({ error: 'Invalid credentials' });
     }
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Login failed', details: err.message });
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
   }
 });
 

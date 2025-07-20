@@ -75,12 +75,37 @@
       if (res.status === 409) {
         alert('User is already registered with this email.');
       } else if (res.ok) {
-        window.location.href = 'login.html';
+        showToast('Registration successful! You can now log in.');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
       } else {
         alert('Registration failed.');
       }
     })
     .catch(() => alert('Registration failed.'));
+
+  // Toast notification function
+  function showToast(message) {
+    let toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.position = 'fixed';
+    toast.style.top = '24px'; // Show at top
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.zIndex = '50';
+    toast.style.background = '#2563eb';
+    toast.style.color = 'white';
+    toast.style.padding = '16px 32px';
+    toast.style.borderRadius = '8px';
+    toast.style.fontWeight = '500';
+    toast.style.fontSize = '1rem';
+    toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
   }
   </script>
 </body>
